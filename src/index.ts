@@ -24,6 +24,9 @@ import {
 } from "./config/index.ts";
 import { initializeDatabase } from "./database/index.ts";
 
+import Uploader from "./uploader/index.ts";
+Uploader();
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -126,6 +129,20 @@ const checkPortAvailable = (port: number): Promise<boolean> => {
   });
 };
 
+const getAllCharacterFiles = async () => {
+  const files = [];
+  try {
+      const fileNames = await fs.promises.readdir('./characters/');
+      fileNames.forEach(fileName => {
+        console.log(fileName);
+        files.push("characters/" + fileName);
+      });
+      return files.join(",");
+  } catch (err) {
+      console.error('Error reading directory:', err);
+  }
+}
+
 const startAgents = async () => {
   const directClient = new DirectClient();
   let serverPort = parseInt(settings.SERVER_PORT || "3000");
@@ -134,8 +151,11 @@ const startAgents = async () => {
   let charactersArg = args.characters || args.character;
   let characters = [character];
 
-  console.log("charactersArg", charactersArg);
   if (charactersArg) {
+    if(charactersArg === 'all') {
+      charactersArg = await getAllCharacterFiles();
+    }
+
     characters = await loadCharacters(charactersArg);
   }
   console.log("characters", characters);
